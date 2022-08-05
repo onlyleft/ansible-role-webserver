@@ -1,0 +1,6 @@
+---
+# handlers file for webserver
+- name: restart nginx
+  ansible.builtin.service:
+    name: docker-compose@nginx
+    state: restarted

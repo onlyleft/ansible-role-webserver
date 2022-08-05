@@ -1,0 +1,46 @@
+---
+# tasks file for webserver
+- name: Create deploy user
+  user:
+    name: deploy
+    uid: 1700
+    password: '!'
+    create_home: False
+- name: Remove default html if present
+  ansible.builtin.file:
+    path: /var/www/html
+    state: absent
+- name: Setup webroot
+  ansible.builtin.file:
+    path: /var/www
+    state: directory
+    owner: deploy
+    mode: '0744'
+- name: Setup nginx directory
+  ansible.builtin.file:
+    path: /etc/docker/compose/nginx
+    state: directory
+    mode: '0700'
+- name: Install nginx.conf
+  ansible.builtin.copy:
+    src: files/nginx.conf
+    dest: /etc/docker/compose/nginx/nginx.conf
+    owner: root
+    group: root
+    mode: '0644'
+- name: Setup nginx config directory
+  ansible.builtin.file:
+    path: /etc/docker/compose/nginx/conf.d
+    state: directory
+    mode: '0700'
+- name: Install nginx compose
+  notify: restart nginx
+  ansible.builtin.template:
+    src: templates/nginx-compose.yml.j2
+    dest: /etc/docker/compose/nginx/docker-compose.yaml
+- name: Enable systemd unit
+  ansible.builtin.systemd:
+    name: docker-compose@nginx
+    enabled: yes
+    state: started
+    daemon_reload: yes
